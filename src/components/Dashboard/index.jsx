@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { connect } from 'react-redux';
 import Obstruction from 'obstruction';
 
@@ -6,6 +6,7 @@ import { CircularProgress, Grid } from '@material-ui/core';
 
 import DriveList from './DriveList';
 import Navigation from '../Navigation';
+import RouteVisualizer from '../RouteVisualizer';
 import DeviceInfo from '../DeviceInfo';
 
 const Prime = lazy(() => import('../Prime'));
@@ -19,6 +20,8 @@ const DashboardLoading = () => (
 );
 
 const Dashboard = ({ primeNav, device, dongleId }) => {
+  const [showNavigation, setShowNavigation] = useState(true);
+
   if (!device || !dongleId) {
     return <DashboardLoading />;
   }
@@ -30,9 +33,24 @@ const Dashboard = ({ primeNav, device, dongleId }) => {
           ? <Prime />
           : (
             <>
-              <Navigation hasNav={device.prime && device.eligible_features?.nav} />
-              <DeviceInfo />
-              <DriveList />
+              <button onClick={() => setShowNavigation(!showNavigation)}>
+                Switch View
+              </button>
+              {showNavigation
+                ? dongleId !== '1d3dc3e03047b0c7' 
+                ? <Navigation hasNav={device.prime && device.eligible_features?.nav} /> 
+                : ( 
+                  <>
+                      <DeviceInfo /> <RouteVisualizer />
+                </>
+                )
+                : (
+                  <>
+                    <DeviceInfo />
+                    <DriveList />
+                  </>
+                )
+              }
             </>
           )}
       </Suspense>
