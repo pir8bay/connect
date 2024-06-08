@@ -219,6 +219,7 @@ class ExplorerApp extends Component {
           handleDrawerStateChanged={this.handleDrawerStateChanged}
           forwardRef={ this.updateHeaderRef }
           toggleDashboardView={toggleDashboardView}
+          showRouteVisualizer={showRouteVisualizer}
         />
         <AppDrawer
           drawerIsOpen={ drawerIsOpen }

@@ -74,7 +74,7 @@ const styles = () => ({
 
 const AppHeader = ({
   profile, classes, dispatch, drawerIsOpen, annotating, showDrawerButton,
-  forwardRef, handleDrawerStateChanged, primeNav, dongleId, toggleDashboardView
+  forwardRef, handleDrawerStateChanged, primeNav, dongleId, toggleDashboardView, showRouteVisualizer
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -129,7 +129,7 @@ const AppHeader = ({
           <div className="flex order-4 w-full justify-center sm:order-none sm:w-auto">
             {Boolean(!primeNav && !annotating && dongleId) && <TimeFilter />}
             <div className={classes.toggleDashboardView} onClick={toggleDashboardView}>
-                Switch View
+                {showRouteVisualizer ? 'View List' : 'View Map'}
             </div>
           </div>
           <div className="flex flex-row gap-2">
