@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Obstruction from 'obstruction';
 import ReactMapGL, { Source, Layer } from 'react-map-gl';
-import { withStyles, Typography } from '@material-ui/core';
+import { withStyles, Typography, Select, MenuItem, FormControl, InputLabel } from '@material-ui/core';
 import Radio from '@material-ui/core/Radio';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import dayjs from 'dayjs';
 import axios from 'axios';
 
 import { DEFAULT_LOCATION, MAPBOX_STYLE, MAPBOX_TOKEN } from '../../utils/geocode';
@@ -49,13 +50,22 @@ const styles = () => ({
   filterContent: {
     padding: 16,
     borderRadius: 8,
-    backgroundColor: 'rgba(66, 74, 79, 0.92)',
+    backgroundColor: 'rgba(66, 74, 79, 0.95)',
   },
   legend: {
     position: 'absolute',
     bottom: 0,
     left: 0,
-    margin: 10,
+    margin: 20,
+  },
+  legendTitle: {
+    color: '#ffffff', 
+    padding: 6, 
+    borderRadius: 2, 
+    fontSize: 14, 
+    fontWeight: '500', 
+    marginBottom: 7,
+    backgroundColor: 'rgba(66, 74, 79, 0.95)'
   },
   legendItemWrapper: {
     padding: 10,
@@ -84,11 +94,14 @@ class RouteVisualizer extends Component {
     super(props);
     this.state = {
       ...initialState,
+      isPloted: false,
       showFilterOptions: true,
       selectedRouteColorOption: 'carEvents',
+      selectedSpecificDateOption: 'All Dates',
       fetchedRoutes: {},
       filteredRoutes: null,
       lengthSliderValue: 0,
+      durationSliderValue: 0,
       viewport: {
         ...DEFAULT_LOCATION,
         zoom: 5,
@@ -107,6 +120,9 @@ class RouteVisualizer extends Component {
     this.handleFilterMouseUp = this.handleFilterMouseUp.bind(this);
     this.handleRouteColor = this.handleRouteColor.bind(this);
     this.handleLengthSliderChange = this.handleLengthSliderChange.bind(this);
+    this.handleSpecificDateDropdownFocus = this.handleSpecificDateDropdownFocus.bind(this);
+    this.handleSpecificDateDropdownBlur = this.handleSpecificDateDropdownBlur.bind(this);
+    this.handleSpecificDateChange = this.handleSpecificDateChange.bind(this);
   }
 
   componentDidMount() {
@@ -118,6 +134,10 @@ class RouteVisualizer extends Component {
     if (prevProps.routes !== this.props.routes) {
       this.plotRoutes();
     }
+  }
+
+  componentWillUnmount() {
+    this.setState({ ...initialState });
   }
 
   checkWebGLSupport() {
@@ -253,6 +273,8 @@ class RouteVisualizer extends Component {
       return;
     }
 
+    console.log(routes)
+
     const linesAndColors = await Promise.all(routesToPlot.map(async route => {
       const coordinates = await this.fetchRoute(route);
       const color = this.assignRouteColor(route);
@@ -273,7 +295,7 @@ class RouteVisualizer extends Component {
       transitionDuration: 1000,
     };
 
-    this.setState({ viewport: newViewport, lines: linesAndColors });
+    this.setState({ viewport: newViewport, lines: linesAndColors, isPloted: true });
   }
 
   toggleFilterContent() {
@@ -281,12 +303,15 @@ class RouteVisualizer extends Component {
   }
 
   handleFilterMouseDown(event) {
-    event.stopPropagation();
-    this.setState({ dragRotate: false, dragPan: false, scrollZoom: false });
+    if (event.target.closest('select') === null) {
+      this.setState({ dragRotate: false, dragPan: false, scrollZoom: false });
+    }
   }
 
-  handleFilterMouseUp() {
-    this.setState({ dragRotate: true, dragPan: true, scrollZoom: true });
+  handleFilterMouseUp(event) {
+    if (event.target.closest('select') === null) {
+      this.setState({ dragRotate: true, dragPan: true, scrollZoom: true });
+    }
   }
 
   handleRouteColor(event) {
@@ -294,15 +319,139 @@ class RouteVisualizer extends Component {
     this.plotRoutes();
   }
 
+  renderFilterButton() {
+    const { classes, showFilterOptions } = this.props;
+
+    return (
+      <button className={classes.filterToggle} onClick={this.toggleFilterContent}>
+        {showFilterOptions ? 'Close' : 'Filter'}
+      </button>
+    );
+  }
+
+  renderRouteColorOptions() {
+    return (
+      <>
+        <Typography style={{ fontWeight: 'bold', color: '#ffffff', marginTop: 5, marginBottom: 5 }}>Color Options :</Typography>
+        <FormControlLabel
+          control={<Radio color="primary" />}
+          label="Based on car events"
+          value="carEvents"
+          checked={this.state.selectedRouteColorOption === 'carEvents'}
+          onChange={this.handleRouteColor}
+        />
+        <FormControlLabel
+          control={<Radio color="primary" />}
+          label="Based on route length"
+          value="routeLength"
+          checked={this.state.selectedRouteColorOption === 'routeLength'}
+          onChange={this.handleRouteColor}
+        />
+      </>
+    );
+  }
+
   handleLengthSliderChange() {
     const { routes } = this.props;
     const { lengthSliderValue } = this.state;
+
+    this.setState({ filteredRoutes: null, durationSliderValue: 0, selectedSpecificDateOption: 'All Dates' });
 
     const filteredRoutes = routes.filter(route => route.length >= lengthSliderValue);
 
     this.setState({ filteredRoutes }, () => {
       this.plotRoutes();
     });
+  }
+
+  handleDurationSliderChange() {
+    const { routes } = this.props;
+    const { durationSliderValue } = this.state;
+
+    this.setState({ filteredRoutes: null, lengthSliderValue: 0, selectedSpecificDateOption: 'All Dates' });
+
+    const durationInMs = durationSliderValue * 60 * 1000;
+
+    const filteredRoutes = routes.filter(route => route.duration >= durationInMs);
+
+    this.setState({ filteredRoutes }, () => {
+      this.plotRoutes();
+    });
+  }
+
+  handleSpecificDateChange() {
+    const { routes } = this.props;
+    const { selectedSpecificDateOption } = this.state;
+
+    this.setState({ filteredRoutes: null, lengthSliderValue: 0, durationSliderValue: 0 });
+
+    if (selectedSpecificDateOption === 'All Dates') {
+      this.setState({ filteredRoutes: null }, this.plotRoutes);
+    } else {
+      const filteredRoutes = routes.filter(route => dayjs(route.start_time).format('YYYY-MM-DD [at] h:mm A') === selectedSpecificDateOption);
+      this.setState({ filteredRoutes }, this.plotRoutes);
+    }
+  }
+
+  handleSpecificDateDropdownFocus() {
+    this.setState({ dragRotate: false, dragPan: false, scrollZoom: false });
+  }
+
+  handleSpecificDateDropdownBlur() {
+    this.setState({ dragRotate: true, dragPan: true, scrollZoom: true });
+  }
+
+  renderRouteSortOptions() {
+    const { classes, routes } = this.props;
+    const availableDates = ['All Dates', ...new Set(routes.map(route => dayjs(route.start_time).format('YYYY-MM-DD [at] h:mm A')))];
+
+    return (
+      <>
+        <Typography style={{ fontWeight: 'bold', color: '#ffffff', marginTop: 7, marginBottom: 15 }}>Sort Options :</Typography>
+        <Typography style={{ color: '#ffffff', marginBottom: 9 }}>Min Length: {this.state.lengthSliderValue} miles</Typography>
+        <input
+          type="range"
+          min="0"
+          max="30"
+          value={this.state.lengthSliderValue}
+          onChange={(event) => {
+            this.setState({ lengthSliderValue: event.target.value }, this.handleLengthSliderChange);
+          }}
+          style={{ cursor: 'pointer' }}
+        />
+        <Typography style={{ color: '#ffffff', marginTop: 19, marginBottom: 12 }}>Min Duration: {this.state.durationSliderValue} minutes</Typography>
+        <input
+          type="range"
+          min="0"
+          max="30"
+          value={this.state.durationSliderValue}
+          onChange={(event) => {
+            this.setState({ durationSliderValue: event.target.value }, this.handleDurationSliderChange);
+          }}
+          style={{ cursor: 'pointer' }}
+        />
+        <Typography style={{ color: '#ffffff', marginTop: 19, marginBottom: 12 }}>Specific Date:</Typography>
+        <FormControl style={{ width: '100%' }}>
+          <Select
+            size="small"
+            value={this.state.selectedSpecificDateOption}
+            onChange={(event) => {
+              this.setState({ selectedSpecificDateOption: event.target.value }, this.handleSpecificDateChange);
+            }}
+            onFocus={this.handleSpecificDateDropdownFocus}
+            onBlur={this.handleSpecificDateDropdownBlur}
+            className={classes.select}
+            style={{ fontSize: '15px' }}
+          >
+            {availableDates.map((date, index) => (
+              <MenuItem key={index} value={date} style={{ fontSize: '0.8rem' }}>
+                {date}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </>
+    );
   }
 
   renderFilterBox() {
@@ -314,39 +463,12 @@ class RouteVisualizer extends Component {
         onMouseDown={this.handleFilterMouseDown}
         onMouseUp={this.handleFilterMouseUp}
       >
-        <button className={classes.filterToggle} onClick={this.toggleFilterContent}>
-          {showFilterOptions ? 'Close' : 'Filter'}
-        </button>
+        {this.renderFilterButton()}
         <div className={classes.filterContent} style={{ display: showFilterOptions ? 'block' : 'none' }}>
           {showFilterOptions && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <Typography style={{ fontWeight: 'bold', color: '#ffffff', marginBottom: 7 }}>Route Color</Typography>
-              <FormControlLabel
-                control={<Radio color="primary" />}
-                label="Based on car events"
-                value="carEvents"
-                checked={this.state.selectedRouteColorOption === 'carEvents'}
-                onChange={this.handleRouteColor}
-              />
-              <FormControlLabel
-                control={<Radio color="primary" />}
-                label="Based on route length"
-                value="routeLength"
-                checked={this.state.selectedRouteColorOption === 'routeLength'}
-                onChange={this.handleRouteColor}
-              />
-              <Typography style={{ fontWeight: 'bold', color: '#ffffff', marginTop: 7, marginBottom: 15 }}>Route Sort</Typography>
-              <Typography style={{ color: '#ffffff', marginBottom: 9 }}>Min length: {this.state.lengthSliderValue} miles</Typography>
-              <input
-                type="range"
-                min="0"
-                max="30"
-                value={this.state.lengthSliderValue}
-                onChange={(event) => {
-                  this.setState({ lengthSliderValue: event.target.value }, this.handleLengthSliderChange);
-                }}
-                style={{ cursor: 'pointer' }}
-              />
+              {this.renderRouteColorOptions()}
+              {this.renderRouteSortOptions()}
             </div>
           )}
         </div>
@@ -354,62 +476,47 @@ class RouteVisualizer extends Component {
     );
   }
 
-  renderLegend() {
+  renderLegendItem(color, text, key) {
     const { classes } = this.props;
 
     return (
+      <div key={key} className={classes.legendItem}>
+        <div className={classes.legendMarker} style={{ backgroundColor: color }} />
+        <Typography style={{ color: '#000000', fontSize: '14px' }}>{text}</Typography>
+      </div>
+    );
+  }
+
+  renderLegend() {
+    const { classes } = this.props;
+
+    const carEventsLegend = [
+      { color: 'salmon', text: 'Event not found for route' },
+      { color: theme.palette.states.alertOrange, text: 'Alert: user prompt' },
+      { color: theme.palette.states.alertRed, text: 'Alert: critical' },
+      { color: theme.palette.states.engagedGreen, text: 'Engage' },
+      { color: theme.palette.states.engagedGrey, text: 'Overriding' },
+      { color: theme.palette.states.drivingBlue, text: 'Disengage' },
+      { color: theme.palette.states.userFlag, text: 'Flag' },
+    ];
+
+    const routeLengthLegend = [
+      { color: '#00FF00', text: 'Short routes < 3 mi' },
+      { color: '#FFFF00', text: 'Medium routes < 15mi' },
+      { color: '#FF0000', text: 'Long routes ~' },
+    ];
+
+    const legendItems = this.state.selectedRouteColorOption === 'carEvents'
+      ? carEventsLegend
+      : this.state.selectedRouteColorOption === 'routeLength'
+        ? routeLengthLegend
+        : [];
+
+    return (
       <div className={classes.legend}>
-        <div style={{ marginBottom: 10 }}>
-          <Typography style={{ color: '#ffffff' }}>Legend</Typography>
-        </div>
+        <Typography className={classes.legendTitle} >Legend</Typography>
         <div className={classes.legendItemWrapper}>
-          {this.state.selectedRouteColorOption === 'carEvents' ? (
-            <>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: 'salmon' }} />
-                <Typography style={{ color: '#000000', fontSize: '14px' }}>Event not found for route</Typography>
-              </div>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: theme.palette.states.alertOrange }} />
-                <Typography style={{ color: '#000000', fontSize: '14px' }}>Alert: user prompt</Typography>
-              </div>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: theme.palette.states.alertRed }} />
-                <Typography style={{ color: '#000000', fontSize: '14px' }}>Alert: critical</Typography>
-              </div>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: theme.palette.states.engagedGreen }} />
-                <Typography style={{ color: '#000000', fontSize: '14px' }}>Engage</Typography>
-              </div>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: theme.palette.states.engagedGrey }} />
-                <Typography style={{ color: '#000000', fontSize: '14px' }}>Overriding</Typography>
-              </div>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: theme.palette.states.drivingBlue }} />
-                <Typography style={{ color: '#000000', fontSize: '14px' }}>Disengage</Typography>
-              </div>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: theme.palette.states.userFlag }} />
-                <Typography style={{ color: '#000000', fontSize: '14px' }}>Flag</Typography>
-              </div>
-            </>
-          ) : this.state.selectedRouteColorOption === 'routeLength' ? (
-            <>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: '#00FF00' }} />
-                <Typography style={{ color: '#000000', fontSize: '14px' }}>Short routes &lt; 3 mi</Typography>
-              </div>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: '#FFFF00' }} />
-                <Typography style={{ color: '#000000' }}>Medium routes &lt; 15mi</Typography>
-              </div>
-              <div className={classes.legendItem}>
-                <div className={classes.legendMarker} style={{ backgroundColor: '#FF0000' }} />
-                <Typography style={{ color: '#000000' }}>Long routes ~</Typography>
-              </div>
-            </>
-          ) : null}
+          {legendItems.map(item => this.renderLegendItem(item.color, item.text, item.text))}
         </div>
       </div>
     );
@@ -451,7 +558,7 @@ class RouteVisualizer extends Component {
           onError={(err) => this.setState({ mapError: err.error.message })}
           onViewportChange={(newViewport) => this.setState({ viewport: newViewport })}
         >
-          {this.renderFilterBox()}
+          {this.state.isPloted && this.renderFilterBox()}
           {lines && lines.flatMap((line, lineIndex) =>
             line.coordinates.map((coordinate, coordinateIndex, array) => {
               if (coordinateIndex === 0) return null; // Skip the first coordinate
