@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { connect } from 'react-redux';
 import Obstruction from 'obstruction';
 
@@ -19,8 +19,7 @@ const DashboardLoading = () => (
   </Grid>
 );
 
-const Dashboard = ({ primeNav, device, dongleId }) => {
-  const [showNavigation, setShowNavigation] = useState(true);
+const Dashboard = ({ primeNav, device, dongleId, showRouteVisualizer }) => {
 
   if (!device || !dongleId) {
     return <DashboardLoading />;
@@ -29,28 +28,20 @@ const Dashboard = ({ primeNav, device, dongleId }) => {
   return (
     <div className="flex flex-col">
       <Suspense fallback={<DashboardLoading />}>
-        { primeNav
+        {primeNav
           ? <Prime />
           : (
             <>
-              <button onClick={() => setShowNavigation(!showNavigation)}>
-                Switch View
-              </button>
-              {showNavigation
-                ? dongleId !== '1d3dc3e03047b0c7' 
-                ? <Navigation hasNav={device.prime && device.eligible_features?.nav} /> 
-                : ( 
-                  <>
-                      <DeviceInfo /> <RouteVisualizer />
-                </>
-                )
-                : (
-                  <>
-                    <DeviceInfo />
-                    <DriveList />
-                  </>
-                )
-              }
+              <DeviceInfo />
+              <div style={{ display: showRouteVisualizer ? 'none' : 'block' }}>
+                <DriveList />
+              </div>
+              <div style={{ display: showRouteVisualizer ? 'block' : 'none' }}>
+                {dongleId !== '1d3dc3e03047b0c7'
+                  ? <Navigation hasNav={device.prime && device.eligible_features?.nav} />
+                  : <RouteVisualizer />
+                }
+              </div>
             </>
           )}
       </Suspense>

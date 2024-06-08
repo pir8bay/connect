@@ -55,11 +55,26 @@ const styles = () => ({
     height: 34,
     width: 34,
   },
+  toggleDashboardView: {
+    display: 'flex', 
+    alignItems: 'center', 
+    height: 'fit-content', 
+    fontSize: 13, 
+    padding: 8, 
+    margin: 'auto', 
+    borderRadius: 10, 
+    color: '#fff', 
+    border: '1px solid #fff',
+    cursor: 'pointer',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    }
+  }
 });
 
 const AppHeader = ({
   profile, classes, dispatch, drawerIsOpen, annotating, showDrawerButton,
-  forwardRef, handleDrawerStateChanged, primeNav, dongleId,
+  forwardRef, handleDrawerStateChanged, primeNav, dongleId, toggleDashboardView
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -113,6 +128,9 @@ const AppHeader = ({
           </div>
           <div className="flex order-4 w-full justify-center sm:order-none sm:w-auto">
             {Boolean(!primeNav && !annotating && dongleId) && <TimeFilter />}
+            <div className={classes.toggleDashboardView} onClick={toggleDashboardView}>
+                Switch View
+            </div>
           </div>
           <div className="flex flex-row gap-2">
             <Suspense><PWAIcon /></Suspense>

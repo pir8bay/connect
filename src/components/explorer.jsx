@@ -180,7 +180,7 @@ class ExplorerApp extends Component {
 
   render() {
     const { classes, zoom, devices, dongleId } = this.props;
-    const { drawerIsOpen, pairLoading, pairError, pairDongleId, windowWidth } = this.state;
+    const { drawerIsOpen, pairLoading, pairError, pairDongleId, windowWidth, showRouteVisualizer=true } = this.state;
 
     const noDevicesUpsell = (devices?.length === 0 && !dongleId);
     const isLarge = noDevicesUpsell || windowWidth > 1080;
@@ -204,6 +204,10 @@ class ExplorerApp extends Component {
       minHeight: `calc(100vh - ${headerHeight}px)`,
     };
 
+    const toggleDashboardView = () => {
+      this.setState({ showRouteVisualizer: !showRouteVisualizer });
+    };
+
     return (
       <div>
         <ResizeHandler onResize={ (ww) => this.setState({ windowWidth: ww }) } />
@@ -214,6 +218,7 @@ class ExplorerApp extends Component {
           showDrawerButton={ !isLarge }
           handleDrawerStateChanged={this.handleDrawerStateChanged}
           forwardRef={ this.updateHeaderRef }
+          toggleDashboardView={toggleDashboardView}
         />
         <AppDrawer
           drawerIsOpen={ drawerIsOpen }
@@ -225,7 +230,7 @@ class ExplorerApp extends Component {
         <div className={ classes.window } style={ containerStyles }>
           { noDevicesUpsell
             ? <NoDeviceUpsell />
-            : (zoom ? <DriveView /> : <Dashboard />)}
+            : (zoom ? <DriveView /> : <Dashboard showRouteVisualizer={showRouteVisualizer} />)}
         </div>
         <IosPwaPopup />
         <Modal open={ Boolean(pairLoading || pairError || pairDongleId) } onClose={ this.closePair }>
