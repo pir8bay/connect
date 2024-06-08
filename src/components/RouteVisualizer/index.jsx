@@ -102,6 +102,11 @@ class RouteVisualizer extends Component {
     this.checkWebGLSupport = this.checkWebGLSupport.bind(this);
     this.onResize = this.onResize.bind(this);
     this.onContainerRef = this.onContainerRef.bind(this);
+    this.toggleFilterContent = this.toggleFilterContent.bind(this);
+    this.handleFilterMouseDown = this.handleFilterMouseDown.bind(this);
+    this.handleFilterMouseUp = this.handleFilterMouseUp.bind(this);
+    this.handleRouteColor = this.handleRouteColor.bind(this);
+    this.handleLengthSliderChange = this.handleLengthSliderChange.bind(this);
   }
 
   componentDidMount() {
@@ -271,25 +276,25 @@ class RouteVisualizer extends Component {
     this.setState({ viewport: newViewport, lines: linesAndColors });
   }
 
-  toggleFilterContent = () => {
+  toggleFilterContent() {
     this.setState(prevState => ({ showFilterOptions: !prevState.showFilterOptions }));
-  };
+  }
 
-  handleFilterMouseDown = (event) => {
+  handleFilterMouseDown(event) {
     event.stopPropagation();
     this.setState({ dragRotate: false, dragPan: false, scrollZoom: false });
-  };
+  }
 
-  handleFilterMouseUp = () => {
+  handleFilterMouseUp() {
     this.setState({ dragRotate: true, dragPan: true, scrollZoom: true });
-  };
+  }
 
-  handleRouteColor = (event) => {
+  handleRouteColor(event) {
     this.setState({ selectedRouteColorOption: event.target.value });
     this.plotRoutes();
-  };
+  }
 
-  handleLengthSliderChange = () => {
+  handleLengthSliderChange() {
     const { routes } = this.props;
     const { lengthSliderValue } = this.state;
 
@@ -298,7 +303,7 @@ class RouteVisualizer extends Component {
     this.setState({ filteredRoutes }, () => {
       this.plotRoutes();
     });
-  };
+  }
 
   renderFilterBox() {
     const { classes } = this.props;
@@ -351,7 +356,7 @@ class RouteVisualizer extends Component {
 
   renderLegend() {
     const { classes } = this.props;
-  
+
     return (
       <div className={classes.legend}>
         <div style={{ marginBottom: 10 }}>
@@ -412,7 +417,7 @@ class RouteVisualizer extends Component {
 
   render() {
     const { classes, hasNav } = this.props;
-    const { mapError, hasFocus, viewport, windowWidth, lines, dragRotate, dragPan, scrollZoom } = this.state;
+    const { mapError, hasFocus, viewport, lines, dragRotate, dragPan, scrollZoom } = this.state;
 
     return (
       <div
