@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Obstruction from 'obstruction';
 import ReactMapGL, { Source, Layer } from 'react-map-gl';
-import { withStyles, Typography, Select, MenuItem, FormControl, InputLabel } from '@material-ui/core';
+import { withStyles, Typography, Select, MenuItem, FormControl } from '@material-ui/core';
 import Radio from '@material-ui/core/Radio';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import dayjs from 'dayjs';
