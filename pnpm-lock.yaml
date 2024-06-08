@@ -23,9 +23,6 @@ importers:
       '@material-ui/icons':
         specifier: ^1.1.1
         version: 1.1.1(@material-ui/core@1.5.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@math.gl/web-mercator':
-        specifier: ^4.0.1
-        version: 4.0.1
       '@sentry/react':
         specifier: ^7.64.0
         version: 7.64.0(react@18.2.0)
@@ -1256,9 +1253,6 @@ packages:
 
   '@math.gl/web-mercator@3.6.3':
     resolution: {integrity: sha512-UVrkSOs02YLehKaehrxhAejYMurehIHPfFQvPFZmdJHglHOU4V2cCUApTVEwOksvCp161ypEqVp+9H6mGhTTcw==}
-
-  '@math.gl/web-mercator@4.0.1':
-    resolution: {integrity: sha512-eJ0nDw8140kJorf8ASyKRC53rI+UG6vPxpsKJiGRD6lXsoKTeKYebeEAXiGDWTvi2AMe6+xngxTqqwm58fL3Fw==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -6438,8 +6432,6 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.23.5
       gl-matrix: 3.4.3
-
-  '@math.gl/web-mercator@4.0.1': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
