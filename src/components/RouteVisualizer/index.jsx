@@ -127,7 +127,6 @@ class RouteVisualizer extends Component {
 
   componentDidMount() {
     this.checkWebGLSupport();
-    this.plotRoutes();
   }
 
   componentDidUpdate(prevProps) {
@@ -204,7 +203,8 @@ class RouteVisualizer extends Component {
     const zoomLat = Math.round(Math.log(180 / latDiff) / Math.log(2));
     const zoom = Math.min(zoomLng, zoomLat);
 
-    return zoom;
+    const zoomAdjustment = 0.4;
+    return zoom + zoomAdjustment;
   }
 
   routeEventsColorRange(route) {
