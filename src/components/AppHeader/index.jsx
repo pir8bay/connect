@@ -18,7 +18,7 @@ import PWAIcon from '../PWAIcon';
 
 const styles = () => ({
   header: {
-    backgroundColor: 'red',
+    backgroundColor: 'blue',
     borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
     display: 'flex',
     flexDirection: 'row',
