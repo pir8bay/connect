@@ -127,10 +127,14 @@ const AppHeader = ({
             </a>
           </div>
           <div className="flex order-4 w-full justify-center sm:order-none sm:w-auto">
-            {Boolean(!primeNav && !annotating && dongleId) && <TimeFilter />}
-            <div className={classes.toggleDashboardView} onClick={toggleDashboardView}>
-                {showRouteVisualizer ? 'View List' : 'View Map'}
-            </div>
+            {Boolean(!primeNav && !annotating && dongleId) && (
+              <>
+                <TimeFilter />
+                <div className={classes.toggleDashboardView} onClick={toggleDashboardView}>
+                  {showRouteVisualizer ? 'View List' : 'View Map'}
+                </div>
+              </>
+            )}
           </div>
           <div className="flex flex-row gap-2">
             <Suspense><PWAIcon /></Suspense>

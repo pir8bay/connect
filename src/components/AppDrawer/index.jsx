@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
 import Obstruction from 'obstruction';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import Drawer from '@material-ui/core/Drawer';
 
 import DeviceList from '../Dashboard/DeviceList';
+import CarEventReenactment from '../CarEventReenactment';
 
 import { selectDevice } from '../../actions';
 
@@ -33,6 +34,11 @@ const AppDrawer = ({
     toggleDrawerOff();
   }, [dispatch, toggleDrawerOff]);
 
+  const location = useLocation();
+  const currentPage = location.pathname;
+
+  const isReplayPage = currentPage.split('/').length === 4 ? true : false;
+
   return (
     <Drawer
       open={isPermanent || drawerIsOpen}
@@ -48,10 +54,15 @@ const AppDrawer = ({
               <span className="text-xl font-extrabold">connect</span>
             </Link>
           )}
-        <DeviceList
-          selectedDevice={selectedDongleId}
-          handleDeviceSelected={handleDeviceSelected}
-        />
+        {!isReplayPage && (
+          <DeviceList
+            selectedDevice={selectedDongleId}
+            handleDeviceSelected={handleDeviceSelected}
+          />
+        )}
+        {isReplayPage && (
+          <CarEventReenactment />
+        )}
       </div>
     </Drawer>
   );
