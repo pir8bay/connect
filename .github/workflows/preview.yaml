@@ -26,12 +26,22 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: List dist directory contents
+        run: ls -R ./dist
+
+      - name: Check if AccountMenu.jsx exists
+        run: |
+          if [ ! -f ./dist/src/components/AppHeader/AccountMenu.jsx ]; then
+            echo "AccountMenu.jsx not found!"
+            exit 1
+          fi
+
       - name: Get Git Commit Hash
         id: commit_hash
         run: echo "COMMIT_HASH=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
       - name: Inject Git Commit Hash
-        run: sed -i "s/REACT_APP_GIT_COMMIT_HASH/${{ env.COMMIT_HASH }}/g" ./dist/src/components/AppHeader/AccountMenu.jsx
+        run: sed -i "s/REACT_APP_GIT_COMMIT_HASH_PLACEHOLDER/${{ env.COMMIT_HASH }}/g" ./dist/src/components/AppHeader/AccountMenu.jsx
 
       - name: Find PR number
         id: pr
